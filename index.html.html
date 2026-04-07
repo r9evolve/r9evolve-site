@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>r9evolve — Web Development Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --deep: #0f0f0f;
+    --surface: #141414;
+    --card: #181818;
+    --border: #222222;
+    --border-light: #2a2a2a;
+    --green: #3a7d2c;
+    --green-mid: #4a9a38;
+    --green-bright: #52b028;
+    --green-glow: #5ec430;
+    --grey: #6b6b6b;
+    --grey-logo: #777777;
+    --grey-light: #999999;
+    --white: #f2f2f2;
+    --white-dim: #cccccc;
+    --font: 'Montserrat', sans-serif;
+    --mono: 'Space Mono', monospace;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: var(--font); font-weight: 300; overflow-x: hidden; cursor: none; }
+
+  /* CURSOR */
+  .cursor { position: fixed; width: 8px; height: 8px; background: var(--green-bright); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%,-50%); transition: opacity 0.2s; }
+  .cursor-ring { position: fixed; width: 32px; height: 32px; border: 1.5px solid rgba(82,176,40,0.5); border-radius: 50%; pointer-events: none; z-index: 9998; transform: translate(-50%,-50%); transition: width 0.2s, height 0.2s, border-color 0.2s; }
+
+  /* NOISE */
+  body::after { content: ''; position: fixed; inset: 0; opacity: 0.025; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9990; }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 800; display: flex; align-items: center; justify-content: space-between; padding: 22px 60px; transition: background 0.4s, border-color 0.4s; }
+  nav.scrolled { background: rgba(10,10,10,0.97); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); }
+  .logo { display: flex; align-items: baseline; text-decoration: none; }
+  .logo-r { color: var(--grey-logo); font-family: var(--font); font-weight: 900; font-size: 1.9rem; line-height: 1; }
+  .logo-9 { color: var(--green-bright); font-family: var(--font); font-weight: 900; font-size: 1.9rem; line-height: 1; }
+  .logo-evolve { color: var(--white); font-family: var(--font); font-weight: 900; font-size: 1.9rem; letter-spacing: normal; text-transform: none; margin-left: 0; line-height: 1; }
+  .nav-links { display: flex; gap: 36px; list-style: none; align-items: center; }
+  .nav-links a { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--grey-light); text-decoration: none; transition: color 0.25s; position: relative; }
+  .nav-links a::after { content: ''; position: absolute; bottom: -3px; left: 0; right: 0; height: 1px; background: var(--green-bright); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-links a:hover::after { transform: scaleX(1); }
+  .nav-cta { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green-bright); border: 1px solid var(--green); padding: 10px 22px; text-decoration: none; transition: all 0.3s; }
+  .nav-cta:hover { background: var(--green); color: var(--white); box-shadow: 0 0 20px rgba(82,176,40,0.25); }
+
+  /* HERO */
+  #hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 0 60px; position: relative; overflow: hidden; }
+  .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(58,125,44,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(58,125,44,0.06) 1px, transparent 1px); background-size: 72px 72px; mask-image: radial-gradient(ellipse 80% 80% at 65% 50%, black 20%, transparent 70%); }
+  .hero-glow { position: absolute; width: 700px; height: 700px; background: radial-gradient(circle, rgba(58,125,44,0.13) 0%, transparent 65%); right: -80px; top: 50%; transform: translateY(-50%); pointer-events: none; animation: breathe 7s ease-in-out infinite; }
+  .hero-glow2 { position: absolute; width: 350px; height: 350px; background: radial-gradient(circle, rgba(94,196,48,0.05) 0%, transparent 65%); left: -80px; bottom: 15%; pointer-events: none; animation: breathe 11s ease-in-out 2s infinite reverse; }
+  @keyframes breathe { 0%,100%{opacity:0.7;transform:translateY(-50%) scale(1)} 50%{opacity:1;transform:translateY(-50%) scale(1.1)} }
+
+  .hero-content { position: relative; z-index: 2; max-width: 860px; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green-bright); border: 1px solid rgba(82,176,40,0.3); padding: 7px 18px; margin-bottom: 36px; opacity: 0; animation: rise 0.8s 0.1s forwards; }
+  .badge-dot { width: 6px; height: 6px; background: var(--green-bright); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+  .hero-h1 { font-family: var(--font); font-weight: 900; font-size: clamp(3.8rem, 9vw, 8.5rem); line-height: 0.93; letter-spacing: -0.03em; color: var(--white); opacity: 0; animation: rise 0.9s 0.3s forwards; }
+  .hero-h1 .outline { color: transparent; -webkit-text-stroke: 1.5px var(--grey-logo); display: block; }
+  .hero-h1 .accent { color: var(--green-bright); display: block; }
+  .hero-h1 .sub { color: var(--grey-logo); font-weight: 300; font-size: 0.4em; letter-spacing: 0.04em; display: block; margin-top: 10px; }
+  .hero-p { margin-top: 32px; font-size: 1rem; color: var(--grey-light); line-height: 1.8; max-width: 460px; opacity: 0; animation: rise 0.9s 0.5s forwards; }
+  .hero-actions { margin-top: 48px; display: flex; align-items: center; gap: 24px; opacity: 0; animation: rise 0.9s 0.7s forwards; }
+  .btn-primary { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; background: var(--green); color: var(--white); padding: 16px 36px; text-decoration: none; position: relative; overflow: hidden; clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px)); transition: box-shadow 0.3s; }
+  .btn-primary::before { content: ''; position: absolute; inset: 0; background: var(--green-mid); transform: translateX(-100%); transition: transform 0.35s ease; }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary:hover { box-shadow: 0 0 32px rgba(82,176,40,0.35); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-ghost { display: inline-flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey-light); text-decoration: none; transition: color 0.3s; }
+  .btn-ghost svg { transition: transform 0.3s; }
+  .btn-ghost:hover { color: var(--white); }
+  .btn-ghost:hover svg { transform: translateX(5px); }
+  .hero-stats { position: absolute; right: 60px; bottom: 80px; display: flex; gap: 48px; opacity: 0; animation: rise 0.9s 1s forwards; z-index: 2; }
+  .stat-num { font-family: var(--font); font-weight: 700; font-size: 2.2rem; color: var(--white); line-height: 1; }
+  .stat-num span { color: var(--green-bright); }
+  .stat-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--grey); margin-top: 4px; }
+  .scroll-hint { position: absolute; bottom: 40px; left: 60px; font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--grey); display: flex; align-items: center; gap: 12px; opacity: 0; animation: rise 0.9s 1.2s forwards; z-index: 2; }
+  .scroll-line { width: 36px; height: 1px; background: linear-gradient(90deg, var(--green), transparent); animation: pulse-line 2s ease-in-out infinite; }
+  @keyframes pulse-line { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  @keyframes rise { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+
+  /* MARQUEE */
+  .marquee-wrap { background: var(--green); padding: 13px 0; overflow: hidden; white-space: nowrap; }
+  .marquee-track { display: inline-flex; animation: scroll-x 25s linear infinite; }
+  .m-item { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(242,242,242,0.75); padding: 0 32px; }
+  .m-sep { color: rgba(242,242,242,0.35); }
+  @keyframes scroll-x { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* SHARED */
+  .section { padding: 120px 60px; }
+  .alt { background: var(--deep); }
+  .label { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--green-bright); margin-bottom: 18px; }
+  .label::before { content: ''; width: 24px; height: 1px; background: var(--green-bright); }
+  .section-h2 { font-family: var(--font); font-weight: 900; font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1; letter-spacing: -0.02em; color: var(--white); }
+  .section-h2 span { color: var(--green-bright); }
+
+  /* SERVICES */
+  .svc-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 72px; }
+  .svc-blurb { max-width: 380px; font-size: 0.9rem; color: var(--grey-light); line-height: 1.8; }
+  .svc-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .svc-card { background: var(--card); padding: 48px 36px; position: relative; overflow: hidden; transition: background 0.35s; }
+  .svc-card::after { content: ''; position: absolute; left: 0; bottom: 0; top: 0; width: 3px; background: linear-gradient(180deg,var(--green-bright),var(--green)); transform: scaleY(0); transform-origin: bottom; transition: transform 0.35s ease; }
+  .svc-card:hover { background: #1c1c1c; }
+  .svc-card:hover::after { transform: scaleY(1); }
+  .svc-icon { width: 44px; height: 44px; margin-bottom: 26px; color: var(--green-mid); transition: color 0.3s; }
+  .svc-card:hover .svc-icon { color: var(--green-bright); }
+  .svc-num { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.2em; color: var(--border-light); margin-bottom: 14px; transition: color 0.3s; }
+  .svc-card:hover .svc-num { color: var(--green); }
+  .svc-title { font-family: var(--font); font-weight: 700; font-size: 1.15rem; color: var(--white); margin-bottom: 12px; }
+  .svc-desc { font-size: 0.83rem; color: var(--grey); line-height: 1.75; }
+  .svc-tags { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 7px; }
+  .svc-tag { font-family: var(--mono); font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); border: 1px solid rgba(58,125,44,0.4); padding: 4px 10px; }
+
+  /* PROCESS */
+  .process-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
+  .process-intro { font-size: 0.9rem; color: var(--grey-light); line-height: 1.8; margin-top: 20px; max-width: 420px; }
+  .process-steps { margin-top: 52px; }
+  .p-step { display: flex; gap: 26px; padding: 26px 0; border-bottom: 1px solid var(--border); cursor: default; transition: padding-left 0.3s; }
+  .p-step:first-child { border-top: 1px solid var(--border); }
+  .p-step:hover { padding-left: 10px; }
+  .p-num { font-family: var(--font); font-weight: 900; font-size: 2.6rem; line-height: 1; color: var(--border-light); min-width: 52px; transition: color 0.3s; }
+  .p-step:hover .p-num { color: var(--green); }
+  .p-title { font-family: var(--font); font-weight: 600; font-size: 0.95rem; color: var(--white); margin-bottom: 7px; }
+  .p-desc { font-size: 0.82rem; color: var(--grey); line-height: 1.7; }
+  .orbit-wrap { position: sticky; top: 120px; }
+  .orbit { width: 100%; aspect-ratio: 1; max-width: 420px; margin: 0 auto; position: relative; }
+  .o-ring { position: absolute; inset: 0; border-radius: 50%; border: 1px solid var(--border); animation: spin 40s linear infinite; }
+  .o-ring:nth-child(2) { inset: 13%; border-color: rgba(58,125,44,0.22); animation-duration: 25s; animation-direction: reverse; }
+  .o-ring:nth-child(3) { inset: 28%; border-color: rgba(94,196,48,0.18); animation-duration: 15s; }
+  .o-dot { position: absolute; width: 8px; height: 8px; background: var(--green-bright); border-radius: 50%; top: -4px; left: calc(50% - 4px); box-shadow: 0 0 10px var(--green-bright); }
+  .o-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .o-r { font-family: var(--font); font-weight: 900; font-size: 5.5rem; line-height: 0.85; color: var(--grey-logo); }
+  .o-9 { font-family: var(--font); font-weight: 900; font-size: 5.5rem; line-height: 0.85; color: var(--green-bright); text-shadow: 0 0 40px rgba(82,176,40,0.4); animation: glow 4s ease-in-out infinite; }
+  @keyframes glow { 0%,100%{text-shadow:0 0 40px rgba(82,176,40,0.4)} 50%{text-shadow:0 0 70px rgba(82,176,40,0.7)} }
+  .o-tag { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--grey); margin-top: 10px; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  /* WORK */
+  .work-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 52px; }
+  .work-note { font-size: 0.83rem; color: var(--grey); max-width: 280px; line-height: 1.7; text-align: right; }
+  .work-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+  .featured { grid-column: span 2; }
+  .w-card { background: var(--card); border: 1px solid var(--border); overflow: hidden; transition: border-color 0.35s, transform 0.35s; }
+  .w-card:hover { border-color: var(--green); transform: translateY(-5px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+  .w-thumb { aspect-ratio: 16/9; background: var(--surface); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .featured .w-thumb { aspect-ratio: 16/7; }
+  .w-bg { position: absolute; inset: 0; }
+  .browser { background: #111; border-radius: 5px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.7); position: relative; z-index: 2; width: 88%; transform: perspective(700px) rotateX(4deg); transition: transform 0.4s; }
+  .featured .browser { width: 82%; }
+  .w-card:hover .browser { transform: perspective(700px) rotateX(0deg); }
+  .b-bar { background: #1a1a1a; padding: 8px 12px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid #252525; }
+  .b-dot { width: 7px; height: 7px; border-radius: 50%; background: #2e2e2e; }
+  .b-url { margin-left: 8px; flex: 1; background: #0f0f0f; border: 1px solid #222; border-radius: 3px; padding: 3px 10px; font-family: var(--mono); font-size: 0.54rem; color: var(--grey); }
+  .b-body { padding: 16px; }
+  .b-line { height: 7px; background: #252525; border-radius: 3px; margin-bottom: 6px; }
+  .b-line.g { background: rgba(58,125,44,0.35); width: 45%; }
+  .b-line.s { width: 60%; }
+  .b-line.m { width: 80%; }
+  .b-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-top: 12px; }
+  .b-block { height: 34px; background: #1e1e1e; border-radius: 3px; border: 1px solid #282828; }
+  .b-block.a { border-color: rgba(58,125,44,0.4); }
+  .w-info { padding: 22px 26px; display: flex; justify-content: space-between; align-items: center; }
+  .w-tag { font-family: var(--mono); font-size: 0.56rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green-mid); margin-bottom: 5px; }
+  .w-title { font-family: var(--font); font-weight: 700; font-size: 1rem; color: var(--white); }
+  .w-arrow { width: 34px; height: 34px; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; color: var(--grey); transition: all 0.3s; flex-shrink: 0; }
+  .w-card:hover .w-arrow { background: var(--green); border-color: var(--green); color: var(--white); }
+
+  /* STACK */
+  .stack-wrap { padding: 80px 60px; background: var(--deep); }
+  .stack-center { text-align: center; margin-bottom: 48px; }
+  .stack-sub { font-size: 0.86rem; color: var(--grey); margin-top: 12px; line-height: 1.7; }
+  .tech-cloud { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 900px; margin: 0 auto; }
+  .t-pill { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); border: 1px solid var(--border-light); padding: 9px 20px; transition: all 0.3s; }
+  .t-pill:hover { color: var(--green-bright); border-color: var(--green); background: rgba(58,125,44,0.07); }
+
+  /* WHY */
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px 80px; margin-top: 64px; }
+  .why-item { display: flex; gap: 20px; }
+  .why-icon { width: 42px; height: 42px; border: 1px solid rgba(58,125,44,0.4); display: flex; align-items: center; justify-content: center; color: var(--green-bright); flex-shrink: 0; margin-top: 2px; }
+  .why-title { font-family: var(--font); font-weight: 600; font-size: 0.95rem; color: var(--white); margin-bottom: 8px; }
+  .why-desc { font-size: 0.83rem; color: var(--grey); line-height: 1.75; }
+
+  /* CONTACT */
+  #contact { background: var(--deep); position: relative; overflow: hidden; padding: 140px 60px; text-align: center; }
+  #contact::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(58,125,44,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(58,125,44,0.05) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black 30%, transparent 70%); }
+  .contact-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(58,125,44,0.11) 0%, transparent 65%); left: 50%; top: 50%; transform: translate(-50%,-50%); pointer-events: none; animation: c-breathe 8s ease-in-out infinite; }
+  @keyframes c-breathe { 0%,100%{opacity:0.7;transform:translate(-50%,-50%) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.1)} }
+  .contact-inner { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; }
+  .contact-h2 { font-family: var(--font); font-weight: 900; font-size: clamp(3rem, 7vw, 6rem); line-height: 0.95; letter-spacing: -0.03em; color: var(--white); margin-bottom: 24px; }
+  .contact-h2 span { color: var(--green-bright); display: block; }
+  .contact-p { font-size: 0.93rem; color: var(--grey-light); line-height: 1.8; margin-bottom: 48px; }
+  .contact-email { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 1rem; letter-spacing: 0.05em; color: var(--white); text-decoration: none; border-bottom: 1px solid var(--green); padding-bottom: 6px; transition: color 0.3s; }
+  .contact-email:hover { color: var(--green-bright); }
+  .contact-email svg { color: var(--green-bright); }
+  .contact-cards { display: flex; gap: 16px; justify-content: center; margin-top: 56px; }
+  .c-card { background: var(--card); border: 1px solid var(--border); padding: 26px 28px; flex: 1; max-width: 200px; text-align: center; transition: border-color 0.3s, background 0.3s; }
+  .c-card:hover { border-color: var(--green); background: #1a1a1a; }
+  .c-icon { color: var(--green-bright); margin-bottom: 12px; }
+  .c-label { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--grey); margin-bottom: 6px; }
+  .c-val { font-size: 0.8rem; color: var(--white-dim); font-weight: 500; }
+
+  /* FOOTER */
+  footer { background: var(--black); border-top: 1px solid var(--border); padding: 44px 60px; display: flex; justify-content: space-between; align-items: center; }
+  .f-logo { display: flex; align-items: baseline; }
+  .f-r { color: var(--grey-logo); font-family: var(--font); font-weight: 900; font-size: 1.5rem; }
+  .f-9 { color: var(--green-bright); font-family: var(--font); font-weight: 900; font-size: 1.5rem; }
+  .f-evolve { color: var(--white); font-family: var(--font); font-weight: 900; font-size: 1.5rem; letter-spacing: normal; text-transform: none; margin-left: 0; line-height: 1; }
+  .f-copy { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.12em; color: var(--grey); text-transform: uppercase; }
+  .f-links { display: flex; gap: 28px; }
+  .f-links a { font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey); text-decoration: none; transition: color 0.25s; }
+  .f-links a:hover { color: var(--green-bright); }
+
+  /* REVEAL */
+  .reveal { opacity: 1; transform: translateY(0); }
+  
+
+  /* RESPONSIVE */
+  @media (max-width: 1024px) {
+    nav { padding: 18px 32px; }
+    .nav-links { display: none; }
+    #hero, .section, .stack-wrap, #contact { padding-left: 32px; padding-right: 32px; }
+    .svc-grid { grid-template-columns: 1fr 1fr; }
+    .process-layout { grid-template-columns: 1fr; }
+    .orbit-wrap { display: none; }
+    .work-grid { grid-template-columns: 1fr; }
+    .featured { grid-column: span 1; }
+    .why-grid { grid-template-columns: 1fr; }
+    .hero-stats { position: static; margin-top: 48px; justify-content: flex-start; }
+    footer { flex-direction: column; gap: 24px; text-align: center; }
+  }
+  @media (max-width: 640px) {
+    .svc-grid { grid-template-columns: 1fr; }
+    .contact-cards { flex-direction: column; align-items: center; }
+    .hero-h1 { font-size: 3rem; }
+    .svc-header { flex-direction: column; gap: 18px; }
+    .work-header { flex-direction: column; gap: 12px; }
+    .work-header .work-note { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo"><span class="logo-r">r</span><span class="logo-9">9</span><span class="logo-evolve">evolve</span></a>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#why">Why Us</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Start a Project</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span>Web Development Studio — r9evolve.com</div>
+    <h1 class="hero-h1">
+      <span class="outline">We Build</span>
+      <span class="accent">Websites</span>
+      <span class="sub">That Drive Real Results</span>
+    </h1>
+    <p class="hero-p">From sleek landing pages to complex web applications — we craft digital experiences that are fast, modern, and built to convert.</p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">
+        <span>Start Your Project</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="position:relative;z-index:1"><path d="M1 7h12M8 3l5 4-5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#services" class="btn-ghost">Our Services <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div><div class="stat-num">50<span>+</span></div><div class="stat-label">Projects Delivered</div></div>
+    <div><div class="stat-num">100<span>%</span></div><div class="stat-label">Client Satisfaction</div></div>
+    <div><div class="stat-num">24<span>/7</span></div><div class="stat-label">Support</div></div>
+  </div>
+  <div class="scroll-hint"><span class="scroll-line"></span>Scroll to explore</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee-track">
+    <span class="m-item">Web Development <span class="m-sep">◆</span></span>
+    <span class="m-item">UI/UX Design <span class="m-sep">◆</span></span>
+    <span class="m-item">E-Commerce <span class="m-sep">◆</span></span>
+    <span class="m-item">Custom CMS <span class="m-sep">◆</span></span>
+    <span class="m-item">SEO Optimization <span class="m-sep">◆</span></span>
+    <span class="m-item">Performance First <span class="m-sep">◆</span></span>
+    <span class="m-item">Mobile Responsive <span class="m-sep">◆</span></span>
+    <span class="m-item">API Integration <span class="m-sep">◆</span></span>
+    <span class="m-item">Web Development <span class="m-sep">◆</span></span>
+    <span class="m-item">UI/UX Design <span class="m-sep">◆</span></span>
+    <span class="m-item">E-Commerce <span class="m-sep">◆</span></span>
+    <span class="m-item">Custom CMS <span class="m-sep">◆</span></span>
+    <span class="m-item">SEO Optimization <span class="m-sep">◆</span></span>
+    <span class="m-item">Performance First <span class="m-sep">◆</span></span>
+    <span class="m-item">Mobile Responsive <span class="m-sep">◆</span></span>
+    <span class="m-item">API Integration <span class="m-sep">◆</span></span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services" class="section">
+  <div class="svc-header reveal">
+    <div><div class="label">What We Do</div><h2 class="section-h2">Services Built<br>for <span>Growth</span></h2></div>
+    <p class="svc-blurb">End-to-end web solutions tailored to your brand — combining clean code, sharp design, and measurable performance.</p>
+  </div>
+  <div class="svc-grid reveal">
+    <div class="svc-card">
+      <div class="svc-num">01</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="40" height="28" rx="2"/><path d="M16 38v4M32 38v4M10 42h28"/><path d="M14 22l6 6-6 6M26 28h8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="svc-title">Custom Web Development</div>
+      <div class="svc-desc">Hand-crafted websites and web apps built from scratch. Fast, scalable, and precisely tailored to your goals.</div>
+      <div class="svc-tags"><span class="svc-tag">React</span><span class="svc-tag">Next.js</span><span class="svc-tag">Node.js</span></div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-num">02</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="6" width="16" height="16" rx="1"/><rect x="26" y="6" width="16" height="16" rx="1"/><rect x="6" y="26" width="16" height="16" rx="1"/><rect x="26" y="26" width="16" height="16" rx="1"/></svg>
+      <div class="svc-title">UI/UX Design</div>
+      <div class="svc-desc">Interfaces that feel intuitive and look stunning. Designed with your users in mind to reduce friction and increase conversions.</div>
+      <div class="svc-tags"><span class="svc-tag">Figma</span><span class="svc-tag">Prototyping</span><span class="svc-tag">Wireframing</span></div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-num">03</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 16h32M8 24h20M8 32h24" stroke-linecap="round"/><circle cx="38" cy="34" r="7"/><path d="M41 31l-4 4-2-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="svc-title">CMS &amp; E-Commerce</div>
+      <div class="svc-desc">Content management systems and online stores that are easy to manage and built to sell. Shopify, WordPress, or fully custom.</div>
+      <div class="svc-tags"><span class="svc-tag">Shopify</span><span class="svc-tag">WordPress</span><span class="svc-tag">Headless</span></div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-num">04</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M24 4C13 4 4 13 4 24s9 20 20 20 20-9 20-20S35 4 24 4z"/><path d="M24 4c-5 0-9 9-9 20s4 20 9 20 9-9 9-20S29 4 24 4z"/><path d="M4 24h40"/></svg>
+      <div class="svc-title">SEO &amp; Performance</div>
+      <div class="svc-desc">Sites that rank and load fast. We optimize for Core Web Vitals, technical SEO, and search visibility from day one.</div>
+      <div class="svc-tags"><span class="svc-tag">Core Web Vitals</span><span class="svc-tag">On-Page SEO</span></div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-num">05</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6" y="6" width="36" height="36" rx="2"/><path d="M16 24h16M24 16v16" stroke-linecap="round"/></svg>
+      <div class="svc-title">API &amp; Integrations</div>
+      <div class="svc-desc">Connect your site to any tool. CRMs, payment gateways, analytics, and third-party APIs — seamlessly integrated.</div>
+      <div class="svc-tags"><span class="svc-tag">REST API</span><span class="svc-tag">Stripe</span><span class="svc-tag">Webhooks</span></div>
+    </div>
+    <div class="svc-card">
+      <div class="svc-num">06</div>
+      <svg class="svc-icon" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M24 8v8M24 32v8M8 24h8M32 24h8"/><circle cx="24" cy="24" r="8"/><path d="M12.7 12.7l5.6 5.6M29.7 29.7l5.6 5.6M12.7 35.3l5.6-5.6M29.7 18.3l5.6-5.6"/></svg>
+      <div class="svc-title">Maintenance &amp; Support</div>
+      <div class="svc-desc">Ongoing support, updates, security patches, and performance monitoring to keep your site running at peak performance 24/7.</div>
+      <div class="svc-tags"><span class="svc-tag">24/7 Monitoring</span><span class="svc-tag">Updates</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process" class="section alt">
+  <div class="process-layout">
+    <div>
+      <div class="reveal">
+        <div class="label">How We Work</div>
+        <h2 class="section-h2">Our Simple<br><span>Process</span></h2>
+        <p class="process-intro">We keep things clear and collaborative. From your first message to launch day, you're never in the dark.</p>
+      </div>
+      <div class="process-steps reveal">
+        <div class="p-step"><div class="p-num">01</div><div><div class="p-title">Discovery &amp; Strategy</div><div class="p-desc">We learn about your business, goals, and audience — then define scope, timeline, and the right tech stack.</div></div></div>
+        <div class="p-step"><div class="p-num">02</div><div><div class="p-title">Design &amp; Prototype</div><div class="p-desc">Wireframes and high-fidelity mockups. You review and approve before a single line of code is written.</div></div></div>
+        <div class="p-step"><div class="p-num">03</div><div><div class="p-title">Build &amp; Develop</div><div class="p-desc">Clean, performant code with regular check-ins to keep you updated every step of the way.</div></div></div>
+        <div class="p-step"><div class="p-num">04</div><div><div class="p-title">Test &amp; Launch</div><div class="p-desc">Rigorous QA across devices and browsers, then a smooth deployment. We handle the technical heavy lifting.</div></div></div>
+        <div class="p-step"><div class="p-num">05</div><div><div class="p-title">Grow &amp; Evolve</div><div class="p-desc">Post-launch support, analytics review, and ongoing improvements. Your website grows as your business does.</div></div></div>
+      </div>
+    </div>
+    <div class="orbit-wrap reveal">
+      <div class="orbit">
+        <div class="o-ring"><div class="o-dot"></div></div>
+        <div class="o-ring"></div>
+        <div class="o-ring"></div>
+        <div class="o-center">
+          <div><span class="o-r">r</span><span class="o-9">9</span></div>
+          <div class="o-tag">Web Studio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section id="work" class="section">
+  <div class="work-header reveal">
+    <div><div class="label">Portfolio</div><h2 class="section-h2">Recent <span>Work</span></h2></div>
+    <p class="work-note">A selection of projects we've built — each crafted with precision and purpose.</p>
+  </div>
+  <div class="work-grid">
+    <div class="w-card featured reveal" style="cursor:pointer;" onclick="window.open('https://welime.com','_blank')">
+      <div class="w-thumb">
+        <div class="w-bg" style="background:linear-gradient(135deg,#0a160e 0%,#0e2016 100%)"></div>
+        <div class="browser">
+          <div class="b-bar"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div><div class="b-url">welime.com</div></div>
+          <div class="b-body"><div class="b-line g"></div><div class="b-line m"></div><div class="b-line s"></div><div class="b-grid"><div class="b-block a"></div><div class="b-block a"></div><div class="b-block"></div><div class="b-block"></div><div class="b-block a"></div><div class="b-block"></div></div><div style="margin-top:10px;display:flex;gap:8px;"><div style="height:28px;flex:2;background:rgba(58,125,44,0.25);border-radius:3px;border:1px solid rgba(58,125,44,0.4);"></div><div style="height:28px;flex:1;background:#1e1e1e;border-radius:3px;border:1px solid #282828;"></div></div></div>
+        </div>
+      </div>
+      <div class="w-info"><div><div class="w-tag">Live Project · Web Development</div><div class="w-title">welime.com</div></div><div class="w-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </div>
+    <div class="w-card reveal">
+      <div class="w-thumb">
+        <div class="w-bg" style="background:linear-gradient(135deg,#0e0e1a 0%,#141420 100%)"></div>
+        <div class="browser"><div class="b-bar"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div><div class="b-url">techstartup.io</div></div><div class="b-body"><div class="b-line g"></div><div class="b-line s"></div><div class="b-line m"></div></div></div>
+      </div>
+      <div class="w-info"><div><div class="w-tag">Web App · React</div><div class="w-title">SaaS Dashboard</div></div><div class="w-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </div>
+    <div class="w-card reveal">
+      <div class="w-thumb">
+        <div class="w-bg" style="background:linear-gradient(135deg,#1a0e0e 0%,#201414 100%)"></div>
+        <div class="browser"><div class="b-bar"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div><div class="b-url">local-brand.com</div></div><div class="b-body"><div class="b-line g"></div><div class="b-line m"></div><div class="b-line s"></div></div></div>
+      </div>
+      <div class="w-info"><div><div class="w-tag">Marketing Site · WordPress</div><div class="w-title">Local Business Brand</div></div><div class="w-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </div>
+    <div class="w-card reveal">
+      <div class="w-thumb">
+        <div class="w-bg" style="background:linear-gradient(135deg,#0a140a 0%,#131a13 100%)"></div>
+        <div class="browser"><div class="b-bar"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div><div class="b-url">consultfirm.co</div></div><div class="b-body"><div class="b-line g"></div><div class="b-line s"></div><div class="b-line m"></div></div></div>
+      </div>
+      <div class="w-info"><div><div class="w-tag">Corporate · Next.js</div><div class="w-title">Consulting Firm</div></div><div class="w-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </div>
+    <div class="w-card reveal">
+      <div class="w-thumb">
+        <div class="w-bg" style="background:linear-gradient(135deg,#12100a 0%,#1a1814 100%)"></div>
+        <div class="browser"><div class="b-bar"><div class="b-dot"></div><div class="b-dot"></div><div class="b-dot"></div><div class="b-url">portfoliosite.dev</div></div><div class="b-body"><div class="b-line g"></div><div class="b-line m"></div><div class="b-line s"></div></div></div>
+      </div>
+      <div class="w-info"><div><div class="w-tag">Portfolio · Custom</div><div class="w-title">Creative Portfolio</div></div><div class="w-arrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<div class="stack-wrap">
+  <div class="stack-center reveal">
+    <div class="label" style="justify-content:center">Technologies</div>
+    <h2 class="section-h2">Our <span>Stack</span></h2>
+    <p class="stack-sub">We use the right tool for every job — modern, proven, and built for the long run.</p>
+  </div>
+  <div class="tech-cloud reveal">
+    <span class="t-pill">React</span><span class="t-pill">Next.js</span><span class="t-pill">Node.js</span><span class="t-pill">TypeScript</span><span class="t-pill">WordPress</span><span class="t-pill">Shopify</span><span class="t-pill">Tailwind CSS</span><span class="t-pill">PostgreSQL</span><span class="t-pill">MongoDB</span><span class="t-pill">Vercel</span><span class="t-pill">AWS</span><span class="t-pill">Figma</span><span class="t-pill">GraphQL</span><span class="t-pill">Stripe</span><span class="t-pill">Webflow</span><span class="t-pill">Docker</span><span class="t-pill">Git</span>
+  </div>
+</div>
+
+<!-- WHY US -->
+<section id="why" class="section alt">
+  <div class="reveal">
+    <div class="label">Why r9evolve</div>
+    <h2 class="section-h2">Built Different,<br><span>Delivered Better</span></h2>
+  </div>
+  <div class="why-grid">
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3L10 14.2l-4.8 2.4.9-5.3L2.3 7.6l5.3-.8z" stroke-linejoin="round"/></svg></div><div><div class="why-title">Quality Over Quantity</div><div class="why-desc">We take on select projects at a time — meaning your project gets our full attention, care, and expertise from start to finish.</div></div></div>
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="8"/><path d="M10 6v4l3 3" stroke-linecap="round"/></svg></div><div><div class="why-title">On-Time Delivery</div><div class="why-desc">We set realistic timelines and stick to them. No surprise delays — just consistent progress and transparent communication.</div></div></div>
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10l5 5 9-9" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="why-title">Clean, Maintainable Code</div><div class="why-desc">Every line we write is clean, documented, and built to last. Your site is yours — no lock-in, no black boxes.</div></div></div>
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10s3.5-7 8-7 8 7 8 7-3.5 7-8 7-8-7-8-7z"/><circle cx="10" cy="10" r="2.5"/></svg></div><div><div class="why-title">Performance-Obsessed</div><div class="why-desc">Fast websites rank higher and convert better. We optimize every project for speed, accessibility, and Core Web Vitals.</div></div></div>
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2C5.6 2 2 5.6 2 10s3.6 8 8 8 8-3.6 8-8"/><path d="M14 2v6h-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="why-title">Ongoing Partnership</div><div class="why-desc">We're not gone after launch. Ongoing maintenance, feature development, and support as your business evolves.</div></div></div>
+    <div class="why-item reveal"><div class="why-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 8c0 5-7 9-7 9S3 13 3 8a7 7 0 0 1 14 0z"/><circle cx="10" cy="8" r="2"/></svg></div><div><div class="why-title">Remote, Reliable</div><div class="why-desc">We work with clients everywhere. Professional, responsive service — wherever you and your business are located.</div></div></div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-glow"></div>
+  <div class="contact-inner">
+    <div class="reveal">
+      <div class="label" style="justify-content:center">Get In Touch</div>
+      <h2 class="contact-h2">Let's Build<span>Something Great</span></h2>
+      <p class="contact-p">Have a project in mind? We'd love to hear about it. Reach out and we'll get back to you within 24 hours.</p>
+      <a href="/cdn-cgi/l/email-protection#4b22252d240b39722e3d24273d2e65282426" class="contact-email"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="16" height="12" rx="1.5"/><path d="M2 6l8 5 8-5" stroke-linecap="round"/></svg><span class="__cf_email__" data-cfemail="bcd5d2dad3fcce85d9cad3d0cad992dfd3d1">[email&#160;protected]</span></a>
+    </div>
+    <div class="contact-cards reveal">
+      <div class="c-card"><div class="c-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 8l10 6 10-6"/></svg></div><div class="c-label">Email Us</div><div class="c-val"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="147d7a727b54662d71627b7862713a777b79">[email&#160;protected]</a></div></div>
+      <div class="c-card"><div class="c-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 2c-2.8 0-5 4.5-5 10s2.2 10 5 10 5-4.5 5-10S14.8 2 12 2z"/><path d="M2 12h20"/></svg></div><div class="c-label">Website</div><div class="c-val">r9evolve.com</div></div>
+      <div class="c-card"><div class="c-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="c-label">Response Time</div><div class="c-val">Within 24 Hours</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo"><span class="f-r">r</span><span class="f-9">9</span><span class="f-evolve">evolve</span></div>
+  <div class="f-copy">© 2025 r9evolve.com — All rights reserved</div>
+  <div class="f-links">
+    <a href="#services">Services</a>
+    <a href="#work">Work</a>
+    <a href="#contact">Contact</a>
+    <a href="/cdn-cgi/l/email-protection#2b42454d446b59124e5d44475d4e05484446"><span class="__cf_email__" data-cfemail="41282f272e01337824372e2d37246f222e2c">[email&#160;protected]</span></a>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  // Cursor
+  const cur = document.getElementById('cursor');
+  const ring = document.getElementById('ring');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX; my=e.clientY;
+    cur.style.left=mx+'px'; cur.style.top=my+'px';
+  });
+  (function anim(){
+    rx+=(mx-rx)*0.14; ry+=(my-ry)*0.14;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(anim);
+  })();
+  document.querySelectorAll('a,button,.svc-card,.w-card,.p-step,.t-pill').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{ ring.style.width='46px'; ring.style.height='46px'; ring.style.borderColor='rgba(82,176,40,0.8)'; });
+    el.addEventListener('mouseleave',()=>{ ring.style.width='32px'; ring.style.h
